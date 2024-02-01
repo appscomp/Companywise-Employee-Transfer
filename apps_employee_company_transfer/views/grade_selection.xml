@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+
+        <record id="branch_employee_grade_form_views" model="ir.ui.view">
+            <field name="name">employee.grade.form.view</field>
+            <field name="model">employee.grade</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="grade" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+        <record id="branch_employee_grade_tree_views" model="ir.ui.view">
+            <field name="name">employee.grade.tree.view</field>
+            <field name="model">employee.grade</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="grade" readonly="1"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_view_branch_grade">
+            <field name="name">Employee Grade</field>
+            <field name="res_model">employee.grade</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem
+                name="Grade Selection"
+                id="menu_inter_grade_transfer"
+                action="action_view_branch_grade"
+                parent="hr.menu_hr_employee_payroll"
+                sequence="15"/>
+
+    </data>
+</odoo>

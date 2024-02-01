@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="package_type_01" model="employee.grade">
+            <field name="grade">1</field>
+
+        </record>
+        <record id="package_type_02" model="employee.grade">
+            <field name="grade">2</field>
+
+        </record>
+        <record id="package_type_03" model="employee.grade">
+            <field name="grade">3</field>
+
+        </record>
+        <record id="package_type_04" model="employee.grade">
+            <field name="grade">4</field>
+
+        </record>
+    </data>
+</odoo>

@@ -1,0 +1,59 @@
+<odoo>
+    <data>
+        <record id="hr_employee_view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">hr.employee.inherit.form</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='parent_id']" position="replace">
+                    <field name="branch"/>
+                    <field name="joining_date"/>
+                        <field name="employee_status"/>
+                        <field name="probation_month"/>
+                        <field name="date_of_permanancy"/>
+                </xpath>
+                <xpath expr="//field[@name='work_email']" position="after">
+                    <field name="grade"/>
+                </xpath>
+                <xpath expr="//field[@name='work_phone']" position="after">
+                    <field name="work_loc_id"/>
+                </xpath>
+                <xpath expr="//field[@name='coach_id']" position="replace">
+
+                    <!--                    <field name="designation"/>-->
+                    <field name="reporting_manager"/>
+                    <field name="supervisor"/>
+
+                </xpath>
+                <xpath expr="//notebook/page[@name='public']/div/div"
+                       position="inside">
+
+                    <group string="Employee">
+                        <field name="first_name"/>
+                        <field name="last_name"/>
+                        <field name="name_in_wps"/>
+                        <field name="saturday_off"/>
+                        <field name="date_of_joining" invisible="1"/>
+                        <field name="joining_date"/>
+                        <field name="employee_status"/>
+                        <field name="probation_month"/>
+                        <field name="date_of_permanancy"/>
+                        <field name="insurance_no"/>
+                    </group>
+                    <group string="Salary Breakdown">
+                        <field name="current_contract"/>
+                        <field name="basic"/>
+                        <field name="housing_allowance"/>
+                        <field name="travel_allowance"/>
+                        <field name="other_allowance"/>
+                        <field name="wage"/>
+                    </group>
+
+
+                </xpath>
+            </field>
+        </record>
+
+
+    </data>
+</odoo>

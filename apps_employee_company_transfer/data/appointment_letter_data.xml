@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!--        COMPANY TO COMPANY SUBMITTED-->
+        <record id="email_template_request_for_company_company_transfer_submit_new" model="mail.template">
+            <field name="name">Company To Company Submitted</field>
+            <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
+            <field name="subject">Company To Company Approval Notification</field>
+            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
+            <!--            <field name="email_to"> t t-out="object.email_to"</field>-->
+            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Dear Sir / Madam,
+                    <br/>
+                </p>
+                <p>Company To Company :
+                    <strong>
+                        <t t-out="object.name"/>
+                    </strong>
+                    has been requested for approval by
+                    <strong>
+                        <t t-out="object.responsible.name"/>
+                    </strong>
+                    . Please find the details as mentioned below.
+                </p>
+                <b>Reference :</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Employee:</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Previous Company:</b>
+                <t t-out="object.current_company.name"/>
+                <br/>
+                <b>Transferred Company:</b>
+                <t t-out="object.transfer_company.name"/>
+                <br/>
+                <b>Previous Reporting Manager:</b>
+                <t t-out="object.current_reporting_manager.name"/>
+                <br/>
+                <b>Transferred Reporting Manager:</b>
+                <t t-out="object.transfer_reporting_manager.name"/>
+                <br/>
+                <b>Transferred Date:</b>
+                <t t-out="object.start_date"/>
+                <br/>
+                <a t-attf-href="{{ ctx['url'] }}">
+                    <button class="btn btn-primary">Link</button>
+                </a>
+                <p>Thank you,
+                    <br/>
+                </p>
+                <br/>
+
+                <p>-------------------------------------------This is a system generated
+                    email----------------------------------------------
+                </p>
+
+
+                <br/>
+
+
+            </field>
+        </record>
+        <!--        COMPANY TO COMPANY TRANSFER CANCELLED-->
+        <record id="email_template_request_for_company_company_transfer_cancelled" model="mail.template">
+            <field name="name">Employee Inter Company Cancelled</field>
+            <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
+            <field name="subject">Employee Inter Company Cancelled Notification</field>
+            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
+            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
+            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Dear Sir / Madam,
+                    <br/>
+                </p>
+                <p>Company To Company :
+                    <strong>
+                        <t t-out="object.name"/>
+                    </strong>
+                    has been requested for approval by
+                    <strong>
+                        <t t-out="object.responsible.name"/>
+                    </strong>
+                    . Please find the details as mentioned below.
+                </p>
+                <b>Reference :</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Employee:</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Previous Company:</b>
+                <t t-out="object.current_company.name"/>
+                <br/>
+                <b>Transferred Company:</b>
+                <t t-out="object.transfer_company.name"/>
+                <br/>
+                <b>Previous Reporting Manager:</b>
+                <t t-out="object.current_reporting_manager.name"/>
+                <br/>
+                <b>Transferred Reporting Manager:</b>
+                <t t-out="object.transfer_reporting_manager.name"/>
+                <br/>
+                <b>Cancelled Date:</b>
+                <t t-out="object.start_date"/>
+                <br/>
+                <a t-attf-href="{{ ctx['url'] }}">
+                    <button class="btn btn-primary">Link</button>
+                </a>
+                <p>Thank you,
+                    <br/>
+                </p>
+                <br/>
+
+                <p>-------------------------------------------This is a system generated
+                    email----------------------------------------------
+                </p>
+
+
+                <br/>
+            </field>
+        </record>
+
+
+        <!--        COMPANY TO COMPANY TRANSFER REJECTED-->
+        <record id="email_template_request_for_company_company_transfer_rejected" model="mail.template">
+            <field name="name">Employee Inter Company Rejected</field>
+            <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
+            <field name="subject">Employee Inter Company Rejected Notification</field>
+            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
+            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
+            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Dear Sir / Madam,
+                    <br/>
+                </p>
+                <p>Company To Company :
+                    <strong>
+                        <t t-out="object.name"/>
+                    </strong>
+                    has been requested for approval by
+                    <strong>
+                        <t t-out="object.responsible.name"/>
+                    </strong>
+                    . Please find the details as mentioned below.
+                </p>
+                <b>Reference :</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Employee:</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Current Company:</b>
+                <t t-out="object.current_company.name"/>
+                <br/>
+                <b>Previous Reporting Manager:</b>
+                <t t-out="object.current_reporting_manager.name"/>
+                <br/>
+
+                <b>Rejected Date:</b>
+                <t t-out="object.start_date"/>
+                <br/>
+                <a t-attf-href="{{ ctx['url'] }}">
+                    <button class="btn btn-primary">Link</button>
+                </a>
+                <p>Thank you,
+                    <br/>
+                </p>
+                <br/>
+
+                <p>-------------------------------------------This is a system generated
+                    email----------------------------------------------
+                </p>
+
+
+                <br/>
+
+
+            </field>
+        </record>
+
+
+        <!--        COMPANY TO COMPANY TRANSFER TRANSFER-->
+        <record id="email_template_request_for_company_company_transfer_approved" model="mail.template">
+            <field name="name">Employee Inter Company Transferred</field>
+            <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
+            <field name="subject">Employee Inter Company Transferred Notification</field>
+            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
+            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
+            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Dear Sir / Madam,
+                    <br/>
+                </p>
+                <p>Company To Company :
+                    <strong>
+                        <t t-out="object.name"/>
+                    </strong>
+                    has been requested for approval by
+                    <strong>
+                        <t t-out="object.responsible.name"/>
+                    </strong>
+                    . Please find the details as mentioned below.
+                </p>
+                <b>Reference :</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Employee:</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Previous Company:</b>
+                <t t-out="object.current_company.name"/>
+                <br/>
+                <b>Transferred Company:</b>
+                <t t-out="object.transfer_company.name"/>
+                <br/>
+                <b>Previous Reporting Manager:</b>
+                <t t-out="object.current_reporting_manager.name"/>
+                <br/>
+                <b>Transferred Reporting Manager:</b>
+                <t t-out="object.transfer_reporting_manager.name"/>
+                <br/>
+                <b>Transferred Date:</b>
+                <t t-out="object.start_date"/>
+                <br/>
+                <a t-attf-href="{{ ctx['url'] }}">
+                    <button class="btn btn-primary">Link</button>
+                </a>
+                <p>Thank you,
+                    <br/>
+                </p>
+                <br/>
+
+                <p>-------------------------------------------This is a system generated
+                    email----------------------------------------------
+                </p>
+
+
+                <br/>
+
+            </field>
+        </record>
+
+        <!--         REVERSE EMPLOYEE COMPLETE PROFILE-->
+        <record id="email_template_request_for_company_company_transfer_reverse_employee" model="mail.template">
+            <field name="name">Employee Inter Company Reversed</field>
+            <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
+            <field name="subject">Employee Inter Company Reversed Notification
+            </field>
+            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
+            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
+            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <p>Dear Sir / Madam,
+                    <br/>
+                </p>
+                <p>Company To Company :
+                    <strong>
+                        <t t-out="object.name"/>
+                    </strong>
+                    has been requested for approval by
+                    <strong>
+                        <t t-out="object.responsible.name"/>
+                    </strong>
+                    . Please find the details as mentioned below.
+                </p>
+                <b>Reference :</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+                <b>Employee:</b>
+                <t t-out="object.employee_id.name"/>
+                <br/>
+
+                <b>Transferred Company:</b>
+                <t t-out="object.transfer_company.name"/>
+                <br/>
+                <b>Return Company:</b>
+                <t t-out="object.current_company.name"/>
+                <br/>
+
+                <b>Transferred Reporting Manager:</b>
+                <t t-out="object.transfer_reporting_manager.name"/>
+                <br/>
+                <b>Return Reporting Manager:</b>
+                <t t-out="object.current_reporting_manager.name"/>
+                <br/>
+                <b>Reversed Date:</b>
+                <t t-out="object.end_date"/>
+                <br/>
+                <a t-attf-href="{{ ctx['url'] }}">
+                    <button class="btn btn-primary">Link</button>
+                </a>
+                <p>Thank you,
+                    <br/>
+                </p>
+                <br/>
+
+                <p>-------------------------------------------This is a system generated
+                    email----------------------------------------------
+                </p>
+
+
+                <br/>
+
+
+            </field>
+        </record>
+    </data>
+</odoo>
