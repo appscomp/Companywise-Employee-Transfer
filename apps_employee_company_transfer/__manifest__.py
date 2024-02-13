@@ -1,7 +1,6 @@
 {
     "name": "Inter Company and Intra Company Employee Transfer",
     'author': 'AppsComp Widgets Pvt Ltd',
-    "live_test_url": "https://www.youtube.com/watch?v=nlWbfPu1EnI",
    'category': 'Human Resources',
     "version": "17.0",
     'summary': "Inter-company (Company-to-Company) employee transfer operations involve the movement of employees from"
@@ -10,9 +9,6 @@
                "resources across different parts of the company. Additionally, intra-company transfers within the company"
                " offer another option for managing workforce distribution efficiently",
     'website': 'https://appscomp.com/',
-    "description": """
-    This module helps users generate Patient Card Report.   
-    """,
     'images': ['static/description/banner.png'],
     "depends": ['base', 'hr', 'apps_branch_master',
                 'hr_holidays', 'hr_contract', 'hr_recruitment', 'account', 'om_hr_payroll',
@@ -36,5 +32,5 @@
     'application': True,
     'auto_install': False,
     'currency': 'EUR',
-    'price': '7',
+    'price': '55',
 }
