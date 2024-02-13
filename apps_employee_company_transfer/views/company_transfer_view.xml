@@ -6,7 +6,17 @@
         <record id="company_company_transfer_sequence" model="ir.sequence">
             <field name="name">Company to Company Transfer</field>
             <field name="code">company.transfer</field>
-            <field name="prefix">ECT/</field>
+            <field name="prefix">Inter/ECT/</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="company_id"></field>
+            <field name="implementation">standard</field>
+        </record>
+
+        <record id="intra_company_company_transfer_sequence" model="ir.sequence">
+            <field name="name">Company to Company Transfer</field>
+            <field name="code">intra.company.transfer</field>
+            <field name="prefix">Intra/ECT/</field>
             <field name="padding">5</field>
             <field name="number_increment">1</field>
             <field name="company_id"></field>
@@ -187,13 +197,23 @@
                         <group>
                             <group string="Current Company">
                                 <field name="transfer_type" required="1"
-                                       attrs="{'readonly' : [('state', '!=', 'draft')]}"/>
+                                       attrs="{'readonly' : ['|',('state', '!=', 'draft'),('record_type','=','intra')]}"/>
                                 <field name="requested_date"
                                        attrs="{'readonly' : [('state', '!=', 'draft')] }"/>
                                 <field name="employee_id"
                                        options="{'no_create': True}"
                                        attrs="{'readonly' : [('state', '!=', 'draft')]}"/>
                                 <field name="current_company"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="record_type"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="1"
+                                />
+                                <field name="company_id"
+                                       invisible="1"
                                        readonly="1"
                                        force_save="1"
                                 />
@@ -261,10 +281,9 @@
                                                         }"/>
                                 <field name="end_date"
                                        attrs="{'readonly' : [('state', 'in', ('reverse','cancel','reject'))],
-                                                        'required':[('transfer_type','=','temp')],'invisible':[('transfer_type','!=','temp')]}"/>
+                                              'required':[('transfer_type','=','temp')],'invisible':[('transfer_type','!=','temp')]}"/>
                                 <field name="transfer_company"
-                                       options="{'no_create': True}"
-                                       attrs="{'readonly' : [('state', '!=', 'draft')]}"/>
+                                       options="{'no_create': True}"/>
                                 <field name="transfer_branch"
                                        options="{'no_create': True}"
                                        domain="[('company_id', '=', transfer_company)]"
@@ -392,7 +411,7 @@
                                                attrs="{'invisible': [('employee_id', '=', False)]}"/>
                                         <field name="transfer_employee_travel_allowance"
                                                force_save="1"/>
-                                        
+
 
                                         <field name="transfer_employee_other_allowance"
                                                force_save="1"
@@ -415,11 +434,34 @@
                 </form>
             </field>
         </record>
-        <record model="ir.actions.act_window" id="action_view_employee_company_transfers">
+        <record model="ir.actions.act_window" id="action_view_inter_employee_company_transfers">
             <field name="name">Company To Company</field>
             <field name="res_model">company.transfer</field>
             <field name="view_mode">tree,form</field>
             <field name="view_id" eval="company_company_transfer_tree_views"/>
+            <field name="domain">[('record_type','=','inter')]</field>
+            <field name="context">{
+                'default_record_type':'inter'
+                }
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new document
+                </p>
+
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_view_intra_employee_company_transfers">
+            <field name="name">Company To Company</field>
+            <field name="res_model">company.transfer</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" eval="company_company_transfer_tree_views"/>
+            <field name="domain">[('record_type','=','intra')]</field>
+            <field name="context">{
+                'default_record_type':'intra',
+                'default_transfer_type':'permanent',
+                }
+            </field>
             <field name="help" type="html">
                 <p class="o_view_nocontent_smiling_face">
                     Create a new document
@@ -431,9 +473,15 @@
         <menuitem
                 name="Inter-Company Employee Transfer"
                 id="menu_inter_company_transfer"
-                action="action_view_employee_company_transfers"
+                action="action_view_inter_employee_company_transfers"
                 parent="apps_employee_company_transfer.transfer_parent"
                 sequence="16"/>
+        <menuitem
+                name="Intra-Company Employee Transfer"
+                id="menu_intra_company_transfer"
+                action="action_view_intra_employee_company_transfers"
+                parent="apps_employee_company_transfer.transfer_parent"
+                sequence="17"/>
 
         <record id="account_move_view_employee_form_inherit" model="ir.ui.view">
             <field name="name">account.move.inherit.form</field>

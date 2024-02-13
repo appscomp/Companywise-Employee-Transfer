@@ -5,16 +5,13 @@
         <record id="email_template_request_for_company_company_transfer_submit_new" model="mail.template">
             <field name="name">Company To Company Submitted</field>
             <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
-            <field name="subject">Company To Company Approval Notification</field>
-            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
-            <!--            <field name="email_to"> t t-out="object.email_to"</field>-->
-            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
                 <p>Dear Sir / Madam,
                     <br/>
                 </p>
-                <p>Company To Company :
+                <p><t t-out="ctx.get('line') "/> Company :
                     <strong>
                         <t t-out="object.name"/>
                     </strong>
@@ -67,16 +64,12 @@
         <record id="email_template_request_for_company_company_transfer_cancelled" model="mail.template">
             <field name="name">Employee Inter Company Cancelled</field>
             <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
-            <field name="subject">Employee Inter Company Cancelled Notification</field>
-            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
-            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
-            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
                 <p>Dear Sir / Madam,
                     <br/>
                 </p>
-                <p>Company To Company :
+                <p><t t-out="ctx.get('line') "/> Company :
                     <strong>
                         <t t-out="object.name"/>
                     </strong>
@@ -129,16 +122,13 @@
         <record id="email_template_request_for_company_company_transfer_rejected" model="mail.template">
             <field name="name">Employee Inter Company Rejected</field>
             <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
-            <field name="subject">Employee Inter Company Rejected Notification</field>
-            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
-            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
-            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
                 <p>Dear Sir / Madam,
                     <br/>
                 </p>
-                <p>Company To Company :
+                <p><t t-out="ctx.get('line') "/> Company :
                     <strong>
                         <t t-out="object.name"/>
                     </strong>
@@ -188,16 +178,12 @@
         <record id="email_template_request_for_company_company_transfer_approved" model="mail.template">
             <field name="name">Employee Inter Company Transferred</field>
             <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
-            <field name="subject">Employee Inter Company Transferred Notification</field>
-            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
-            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
-            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
                 <p>Dear Sir / Madam,
                     <br/>
                 </p>
-                <p>Company To Company :
+                <p><t t-out="ctx.get('line') "/> Company :
                     <strong>
                         <t t-out="object.name"/>
                     </strong>
@@ -250,17 +236,13 @@
         <record id="email_template_request_for_company_company_transfer_reverse_employee" model="mail.template">
             <field name="name">Employee Inter Company Reversed</field>
             <field name="model_id" ref="apps_employee_company_transfer.model_company_transfer"/>
-            <field name="subject">Employee Inter Company Reversed Notification
-            </field>
-            <!--            <field name="email_from">${(user.email and '%s &lt;%s&gt;' %(user.name, user.email) or '')|safe}</field>-->
-            <!--            <field name="email_to">${ctx.get('email_to')}</field>-->
-            <!--            <field name="email_cc">${ctx.get('email_cc')}</field>-->
+
             <field name="auto_delete" eval="False"/>
             <field name="body_html" type="html">
                 <p>Dear Sir / Madam,
                     <br/>
                 </p>
-                <p>Company To Company :
+                <p><t t-out="ctx.get('line') "/> Company :
                     <strong>
                         <t t-out="object.name"/>
                     </strong>

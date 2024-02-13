@@ -20,7 +20,13 @@ class CompanyToCompanyTransfer(models.Model):
         emp_ids = self.sudo().env['hr.employee'].search([('user_id', '=', self.env.uid)])
         return emp_ids and emp_ids[0] or False
 
-    name = fields.Char(string='Employee Inter Company Transfer', required=True, copy=False, readonly=True,
+    user_id = fields.Many2one('res.users', string='User', ondelete='cascade', index=True,
+                              default=lambda self: self.env.user
+                              )
+    company_id = fields.Many2one('res.company', string='Company', ondelete='cascade', index=True,
+                                 default=lambda self: self.env.company
+                                 )
+    name = fields.Char(string='Employee Company Transfer', required=True, copy=False, readonly=True,
                        states={'draft': [('readonly', False)]}, index=True, default=lambda self: _('New Transfer'),
                        help='A unique sequence number for the Transfer')
     remarks = fields.Text('Remarks', help="Specify notes for the transfer if any")
@@ -28,7 +34,8 @@ class CompanyToCompanyTransfer(models.Model):
     employee_id = fields.Many2one("hr.employee", string="Employee", required=True,
                                   help='Select the employee you are going to transfer')
     current_company = fields.Many2one("res.company", string="Current Company")
-    transfer_company = fields.Many2one("res.company", string="Transfer to Company", required=True, tracking=True)
+    transfer_company = fields.Many2one("res.company",
+                                       string="Transfer to Company", required=True, tracking=True)
     current_branch = fields.Many2one("res.branch", string="Current Branch")
     transfer_branch = fields.Many2one("res.branch", string="Transfer to Branch", required=True, tracking=True)
     current_department = fields.Many2one("hr.department", string="Current Department")
@@ -98,6 +105,7 @@ class CompanyToCompanyTransfer(models.Model):
         [('temp', 'Temporary'),
          ('permanent', 'Permanent')],
         string='Transfer Type')
+    record_type = fields.Selection([('inter', 'INTER'), ('intra', 'INTRA')])
     responsible = fields.Many2one('hr.employee', string='Requested By', default=_default_employee, readonly=True,
                                   help="Responsible person for the transfer")
     employee_count = fields.Integer(compute='_compute_employee_count')
@@ -114,6 +122,11 @@ class CompanyToCompanyTransfer(models.Model):
                                             default=0)
     gratuity_amount = fields.Float("Gratuity Amount")
     image_field = fields.Binary(string="image")
+
+    # @api.onchange('record_type', 'employee_id')
+    # def _onchange_record_type(self):
+    #     self.transfer_company = self.current_company.id
+    #     print('-============-========-----------------------', self.current_company)
 
     @api.onchange('employee_id')
     def onchange_employee_id(self):
@@ -149,14 +162,18 @@ class CompanyToCompanyTransfer(models.Model):
                 'transfer_employee_other_allowance': self.employee_id.other_allowance,
                 'transfer_employee_wage': self.employee_id.wage,
                 'image_field': self.employee_id.image_1920,
-
             })
+            if self.record_type == 'intra':
+                self.transfer_company = self.employee_id.company_id.id,
             # self.sudo().get_eligible_amount1()
 
     def submit_employee_company_transfer(self):
-        if self.current_company == self.transfer_company:
-            raise ValidationError(
-                "Alert!!, Current Company and Transferred Company cannot be same for %s." % self.employee_id.name)
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
+        if self.record_type == 'inter':
+            if self.current_company == self.transfer_company:
+                raise ValidationError(
+                    "Alert!!, Current Company and Transferred Company cannot be same for %s." % self.employee_id.name)
         hr_employee = self.sudo().env['hr.employee'].sudo().search([('id', '=', self.employee_id.id)])
         ctx = self.sudo().env.context.copy()
         current_user = self.env.user.name
@@ -172,19 +189,17 @@ class CompanyToCompanyTransfer(models.Model):
             # 'date': self.requested_date,
             # 'transferred_reporting_manager': self.sudo().transfer_reporting_manager.name,
             # 'reverse_reporting_manager': self.sudo().current_reporting_manager.name,
+
+            'subject': (dict(self._fields['record_type'].selection).get(
+                self.record_type)) + " COMPANY APPROVAL NOTIFICATION",
             'email_from': self.env.user.email_formatted,
             'email_to': self.sudo().current_reporting_manager.work_email,
             'email_cc': '',
         }
         template = self.sudo().env.ref(
             'apps_employee_company_transfer.email_template_request_for_company_company_transfer_submit_new', False)
-        template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
-
-        # template = self.sudo().env.ref(
-        #     'hr_employee_orientation.email_template_request_for_company_company_transfer_submit',
-        #     False)
-        # template.with_context(ctx).sudo().send_mail(self.id, force_send=True)
-        # self.get_eligible_amount1()
+        template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                          email_values=email_values)
         self.sudo().write({'state': 'submit'})
 
     # THIS FUNCTIONALITY HELPS USERS TO FIND THE EMPLOYEE'S REMAINING LEAVES'
@@ -205,6 +220,8 @@ class CompanyToCompanyTransfer(models.Model):
             leave.allocated_days = abs(total_leave_alloted)
 
     def approve_employee_company_transfer(self):
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
         if (self.env.user.id == self.sudo().current_reporting_manager.user_id.id or \
                 self.sudo().env.user.has_group('hr.group_hr_manager') or
                 self.sudo().env.user.has_group('hr.group_hr_user')):
@@ -222,6 +239,8 @@ class CompanyToCompanyTransfer(models.Model):
                 # 'current_reporting_manager': self.sudo().current_reporting_manager.name,
                 # 'transferred_reporting_manager': self.sudo().transfer_reporting_manager.name,
                 # 'date': self.requested_date,
+                'subject': "EMPLOYEE " + (dict(self._fields['record_type'].selection).get(
+                    self.record_type)) + " COMPANY APPROVED NOTIFICATION",
                 'email_from': self.env.user.email_formatted,
                 'email_to': self.employee_id.work_email,
                 'email_cc': self.transfer_reporting_manager.work_email,
@@ -229,7 +248,8 @@ class CompanyToCompanyTransfer(models.Model):
 
             template = self.sudo().env.ref(
                 'apps_employee_company_transfer.email_template_request_for_company_company_transfer_approved', False)
-            template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
+            template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                              email_values=email_values)
 
             # template = self.sudo().env.ref(
             #     'hr_employee_orientation.email_template_request_for_company_company_transfer_approved',
@@ -242,6 +262,8 @@ class CompanyToCompanyTransfer(models.Model):
                 "Only, Reporting Manager allowed to Approve it.\n"))
 
     def reject_employee_company_transfer(self):
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
         if (self.env.user.id == self.sudo().current_reporting_manager.user_id.id or \
                 self.sudo().env.user.has_group('hr.group_hr_manager') or
                 self.sudo().env.user.has_group('hr.group_hr_user')):
@@ -257,6 +279,8 @@ class CompanyToCompanyTransfer(models.Model):
                 # 'current_company': self.sudo().current_company.name,
                 # 'current_reporting_manager': self.sudo().current_reporting_manager.name,
                 # 'date': self.requested_date,
+                'subject': "EMPLOYEE " + (dict(self._fields['record_type'].selection).get(
+                    self.record_type)) + " COMPANY REJECTED NOTIFICATION",
                 'email_from': self.env.user.email_formatted,
 
                 'email_to': self.employee_id.work_email,
@@ -264,11 +288,9 @@ class CompanyToCompanyTransfer(models.Model):
             }
             template = self.sudo().env.ref(
                 'apps_employee_company_transfer.email_template_request_for_company_company_transfer_rejected', False)
-            template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
-            # template = self.sudo().env.ref(
-            #     'hr_employee_orientation.email_template_request_for_company_company_transfer_rejected',
-            #     False)
-            # template.with_context(ctx).sudo().send_mail(self.id, force_send=True)
+            template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                              email_values=email_values)
+
             self.sudo().write({'state': 'reject'})
         else:
             raise UserError(_(
@@ -279,6 +301,8 @@ class CompanyToCompanyTransfer(models.Model):
         self.sudo().write({'state': 'draft'})
 
     def cancel_employee_company_transfer(self):
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
         ctx = self.sudo().env.context.copy()
         current_user = self.env.user.name
         current_url = self.sudo().env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -291,6 +315,8 @@ class CompanyToCompanyTransfer(models.Model):
             # 'current_company': self.sudo().current_company.name,
             # 'current_reporting_manager': self.sudo().current_reporting_manager.name,
             # 'date': self.requested_date,
+            'subject': "EMPLOYEE " + (dict(self._fields['record_type'].selection).get(
+                self.record_type)) + " COMPANY CANCELLED NOTIFICATION",
             'email_from': self.env.user.email_formatted,
 
             'email_to': self.sudo().employee_id.work_email,
@@ -298,18 +324,8 @@ class CompanyToCompanyTransfer(models.Model):
         }
         template = self.sudo().env.ref(
             'apps_employee_company_transfer.email_template_request_for_company_company_transfer_cancelled', False)
-        template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
-        # template = self.sudo().env.ref(
-        #     'hr_employee_orientation.email_template_request_for_company_company_transfer_cancelled', False)
-        # template.with_context(ctx).sudo().send_mail(self.id, force_send=True)
-        # payslip = self.env['hr.payslip'].sudo().search(
-        #     [('employee_id', '=', self.employee_id.id), ('intercompany_transfer', '=', True),
-        #      ('company_id', '=', self.current_company.id)], limit=1)
-        # if payslip:
-        #     for pay in payslip:
-        #         pay.sudo().action_payslip_cancel()
-        # self.payslip_generated = False
-        # self.payslip_reverse_generated = False
+        template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                          email_values=email_values)
         self.sudo().write({'state': 'cancel'})
 
     def employee_probation_notify(self):
@@ -392,48 +408,11 @@ class CompanyToCompanyTransfer(models.Model):
                 payslip.compute_sheet()
                 self.payslip_reverse_generated = True
 
-            # payslip = self.env['hr.payslip'].sudo().create({
-            #     'employee_id': self.employee_id.id,
-            #     'name': _('Salary Slip of %s for %s') % (self.employee_id.name, tools.ustr(babel.dates.format_date(date=ttyme, format='MMMM-y', locale=locale))),
-            #     'number': 'Contract for ' + str(self.employee_id.name),
-            #     'date_to': self.end_date,
-            #     'date': self.requested_date,
-            #     'company_id': self.transfer_company.id,
-            #     'branch_id': self.transfer_branch.id,
-            #     'contract_id': self.employee_id.contract_id.id,
-            #     # 'journal_id': self.employee_current_salary_journal.id,
-            #     'struct_id': self.struct_id.id,
-            #     'date_from': self.end_date.replace(day=1),
-            # })
-            # payslip.onchange_employee()
-            # payslip.compute_sheet()
-            # payslip = self.sudo().env['hr.payslip'].create({
-            #     'employee_id': self.employee_id.id,
-            #     'name': _('Salary Slip of %s for %s') % (
-            #     self.employee_id.name, tools.ustr(babel.dates.format_date(date=ttyme, format='MMMM-y', locale=locale))),
-            #     'number': 'Contract for ' + str(self.employee_id.name),
-            #     'date_from': self.end_date + timedelta(days=1),
-            #     'date_to': date.today()+ relativedelta(day=31),
-            #     'date': self.requested_date,
-            #     'contract_id': self.employee_current_contract.id,
-            #     'company_id': self.current_company.id,
-            #     'branch_id': self.current_branch.id,
-            #     # 'journal_id': self.journal_id.id,
-            #     'struct_id': self.employee_current_salary_structure.id,
-            # })
             return payslip
 
-        # template = self.sudo().env.ref(
-        #     'hr_employee_orientation.email_template_request_for_company_company_transfer_reverse_employee', False)
-        # template.with_context(ctx).sudo().send_mail(self.id, force_send=True)
-
     def reverse_employee_company_transfer(self):
-        # payslip = self.env['hr.payslip'].sudo().search(
-        #     [('employee_id', '=', self.employee_id.id), ('intercompany_transfer', '=', True),
-        #      ('company_id', '=', self.transfer_company.id)], limit=1)
-        # if not payslip:
-        #     raise ValidationError("Please Generate Payslip before transferring to the new company..!")
-
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
         hr_employee = self.sudo().env['hr.employee'].sudo().search([('id', '=', self.employee_id.id)])
         self.sudo().cancel_transfer()
         self.sudo().reverse_new_transfer_contract()
@@ -482,6 +461,8 @@ class CompanyToCompanyTransfer(models.Model):
             # 'transferred_reporting_manager': self.transfer_reporting_manager.name,
             # 'reverse_reporting_manager': self.current_reporting_manager.name,
             # 'date': self.requested_date,
+            'subject': "EMPLOYEE " + (dict(self._fields['record_type'].selection).get(
+                self.record_type)) + " COMPANY CANCELLED NOTIFICATION",
             'email_from': self.env.user.email_formatted,
 
             'email_to': self.employee_id.work_email,
@@ -490,26 +471,68 @@ class CompanyToCompanyTransfer(models.Model):
         template = self.sudo().env.ref(
             'apps_employee_company_transfer.email_template_request_for_company_company_transfer_reverse_employee',
             False)
-        template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
+        template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                          email_values=email_values)
 
     def update_employee_company_transfer(self):
+        camel_case = (dict(self._fields['record_type'].selection).get(
+            self.record_type)).title()
         if self.sudo().env.user.has_group('hr.group_hr_manager') or self.sudo().env.user.has_group('hr.group_hr_user'):
             hr_employee = self.env['hr.employee'].sudo().search([('id', '=', self.employee_id.id)])
 
-            if self.transfer_type == 'permanent':
-                self.sudo().create_graduity()
+            if self.record_type == 'inter':
+                if self.current_company == self.transfer_company:
+                    raise ValidationError(
+                        "Alert!!, Current Company and Transferred Company cannot be same for %s." % self.employee_id.name)
+                if self.transfer_type == 'permanent':
+                    self.sudo().create_graduity()
+                    self.sudo().cancel_transfer()
+                    self.sudo().create_new_transfer_contract()
+                    # self.sudo().create_new_transfer_payslip()
+                    hr_employee.sudo().write({
+                        'company_id': self.transfer_company.id,
+                        'branch_id': self.transfer_branch.id,
+                        'work_loc_id': self.transfer_branch.id,
+                        'parent_id': self.transfer_reporting_manager.id,
+                        'department_id': self.transfer_department.id,
+                        'job_id': self.transfer_job.id,
+                        'grade': self.transfer_grade_id.id,
+                        'joining_date': self.requested_date,
+                        'address_id': self.transfer_company.id,
+                        'supervisor': self.transfer_supervisor.id,
+                        'reporting_manager': self.transfer_reporting_manager,
+                    })
+                if int(self.current_grade_id.grade) <= 2 and self.transfer_supervisor:
+                    hr_employee.sudo().write({
+                        'supervisor': self.transfer_supervisor.id})
+                if int(self.current_grade_id.grade) <= 2 and not self.transfer_supervisor:
+                    hr_employee.sudo().write({
+                        'supervisor': self.current_supervisor.id})
 
-            if self.current_company == self.transfer_company:
-                raise ValidationError(
-                    "Alert!!, Current Company and Transferred Company cannot be same for %s." % self.employee_id.name)
+                employee_id = self.env['res.users'].sudo().search([('id', '=', self.employee_id.user_id.id)])
+                if employee_id and self.transfer_branch:
+                    company = self.employee_id.user_id.company_ids.ids
+                    branch = self.employee_id.user_id.branch_ids.ids
+                    employee_company = self.transfer_company.id
+                    employee_branch = self.transfer_branch.id
+                    company.append(employee_company)
+                    branch.append(employee_branch)
+                    employee_id.sudo().write({
+                        'company_id': self.transfer_company.id,
+                        'company_ids': company,
+                        'branch_ids': branch,
+                        'branch_id': self.transfer_branch.id,
+                    })
+                # self.state = 'transfer'
+                print("66666666666666")
 
             else:
+                print("555555555555555555555")
                 self.sudo().cancel_transfer()
                 self.sudo().create_new_transfer_contract()
                 # self.sudo().create_new_transfer_payslip()
                 hr_employee.sudo().write({
                     'company_id': self.transfer_company.id,
-                    # 'wps_company': self.transfer_company.id,
                     'branch_id': self.transfer_branch.id,
                     'work_loc_id': self.transfer_branch.id,
                     'parent_id': self.transfer_reporting_manager.id,
@@ -518,8 +541,8 @@ class CompanyToCompanyTransfer(models.Model):
                     'grade': self.transfer_grade_id.id,
                     'joining_date': self.requested_date,
                     'address_id': self.transfer_company.id,
-                    'supervisor': self.transfer_supervisor.id or False,
-
+                    'supervisor': self.transfer_supervisor.id,
+                    'reporting_manager': self.transfer_reporting_manager,
                 })
             if int(self.current_grade_id.grade) <= 2 and self.transfer_supervisor:
                 hr_employee.sudo().write({
@@ -542,7 +565,50 @@ class CompanyToCompanyTransfer(models.Model):
                     'branch_ids': branch,
                     'branch_id': self.transfer_branch.id,
                 })
-            self.state = 'transfer'
+            # self.state = 'transfer'
+
+            if self.transfer_type == 'permanent':
+                self.sudo().create_graduity()
+
+            else:
+                self.sudo().cancel_transfer()
+                self.sudo().create_new_transfer_contract()
+                # self.sudo().create_new_transfer_payslip()
+                hr_employee.sudo().write({
+                    'company_id': self.transfer_company.id,
+                    'branch_id': self.transfer_branch.id,
+                    'work_loc_id': self.transfer_branch.id,
+                    'parent_id': self.transfer_reporting_manager.id,
+                    'department_id': self.transfer_department.id,
+                    'job_id': self.transfer_job.id,
+                    'grade': self.transfer_grade_id.id,
+                    'joining_date': self.requested_date,
+                    'address_id': self.transfer_company.id,
+                    'supervisor': self.transfer_supervisor.id,
+                    'reporting_manager': self.transfer_reporting_manager,
+                })
+            if int(self.current_grade_id.grade) <= 2 and self.transfer_supervisor:
+                hr_employee.sudo().write({
+                    'supervisor': self.transfer_supervisor.id})
+            if int(self.current_grade_id.grade) <= 2 and not self.transfer_supervisor:
+                hr_employee.sudo().write({
+                    'supervisor': self.current_supervisor.id})
+
+            employee_id = self.env['res.users'].sudo().search([('id', '=', self.employee_id.user_id.id)])
+            if employee_id and self.transfer_branch:
+                company = self.employee_id.user_id.company_ids.ids
+                branch = self.employee_id.user_id.branch_ids.ids
+                employee_company = self.transfer_company.id
+                employee_branch = self.transfer_branch.id
+                company.append(employee_company)
+                branch.append(employee_branch)
+                employee_id.sudo().write({
+                    'company_id': self.transfer_company.id,
+                    'company_ids': company,
+                    'branch_ids': branch,
+                    'branch_id': self.transfer_branch.id,
+                })
+            # self.state = 'transfer'
             # allocated = self.create_leave_allocation()
             # allocated.action_confirm()
             # self.sudo().cancel_create_leave_allocation()
@@ -561,6 +627,8 @@ class CompanyToCompanyTransfer(models.Model):
                 # 'current_reporting_manager': self.sudo().current_reporting_manager.name,
                 # 'transferred_reporting_manager': self.sudo().transfer_reporting_manager.name,
                 # 'date': self.requested_date,
+                'subject': "EMPLOYEE " + (dict(self._fields['record_type'].selection).get(
+                    self.record_type)) + " COMPANY TRANSFERED NOTIFICATION",
                 'email_from': self.env.user.email_formatted,
 
                 'email_to': self.get_previous_transfer_reporting_manager(),
@@ -569,7 +637,8 @@ class CompanyToCompanyTransfer(models.Model):
 
             template = self.sudo().env.ref(
                 'apps_employee_company_transfer.email_template_request_for_company_company_transfer_approved', False)
-            template.with_context(url=current_url).send_mail(self.id, force_send=True, email_values=email_values)
+            template.with_context(url=current_url, line=camel_case).send_mail(self.id, force_send=True,
+                                                                              email_values=email_values)
 
         else:
             raise ValidationError(
@@ -895,7 +964,10 @@ class CompanyToCompanyTransfer(models.Model):
 
     @api.model
     def create(self, values):
-        values['name'] = self.sudo().env['ir.sequence'].get('company.transfer') or 'New Transfer'
+        if values['record_type'] == 'inter':
+            values['name'] = self.sudo().env['ir.sequence'].get('company.transfer') or 'New Inter Transfer'
+        else:
+            values['name'] = self.sudo().env['ir.sequence'].get('intra.company.transfer') or 'New Intra Transfer'
         res = super(CompanyToCompanyTransfer, self).create(values)
         return res
 
@@ -1164,6 +1236,7 @@ class CompanyToCompanyTransfer(models.Model):
             # 'journal_id': self.journal_id.id,
             'state': 'open',
         })
+        print("22222222222222222222", contract)
         return contract
 
     def action_approve(self):
