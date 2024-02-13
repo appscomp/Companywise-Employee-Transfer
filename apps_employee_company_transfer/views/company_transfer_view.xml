@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <data>
+        <!--           COMPANY TO COMPANY -->
+        <record id="company_company_transfer_sequence" model="ir.sequence">
+            <field name="name">Company to Company Transfer</field>
+            <field name="code">company.transfer</field>
+            <field name="prefix">Inter/ECT/</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="company_id"></field>
+            <field name="implementation">standard</field>
+        </record>
+
+        <record id="intra_company_company_transfer_sequence" model="ir.sequence">
+            <field name="name">Company to Company Transfer</field>
+            <field name="code">intra.company.transfer</field>
+            <field name="prefix">Intra/ECT/</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="company_id"></field>
+            <field name="implementation">standard</field>
+        </record>
+
+
+        <record id="company_company_transfer_tree_views" model="ir.ui.view">
+            <field name="name">company.company.tree.view</field>
+            <field name="model">company.transfer</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="employee_id"/>
+                    <field name="requested_date"/>
+                    <field name="current_company"/>
+                    <field name="transfer_company"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="company_company_transfer_form_views" model="ir.ui.view">
+            <field name="name">company.transfer.form.view</field>
+            <field name="model">company.transfer</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+
+                        <button name="submit_employee_company_transfer"
+                                string="Submit"
+                                invisible="state not in 'draft'"
+
+                                class="oe_highlight"
+                                type="object"/>
+                        <button name="update_employee_company_transfer"
+                                string="Transfer"
+                                invisible="state not in 'approve'"
+
+                                class="oe_highlight"
+                                type="object"/>
+                        <button name="approve_employee_company_transfer"
+                                string="Approve"
+                                invisible="state not in 'submit'"
+
+                                class="oe_highlight"
+                                type="object"/>
+                        <button name="reject_employee_company_transfer"
+                                string="Reject"
+                                class="oe_highlight"
+                                invisible="state not in 'submit'"
+
+                                type="object"/>
+                        <button name="set_to_draft" string="Set to Draft"
+                                invisible="state not in ['cancel','reject']"
+
+                                type="object"/>
+                        <button name="cancel_employee_company_transfer"
+                                string="Cancel"
+                                invisible="state not in 'approve'"
+
+                                type="object"/>
+                        <button name="employee_probation_notify"
+                                string="Probation Request"
+                                class="oe_highlight"
+                                invisible="'|','|',employee_notice_period != 0 , state not in 'transfer' , transfer_type != 'temp'"
+
+                                type="object"/>
+                        <!--                                attrs="{'invisible': ['|','|',-->
+                        <!--                                                                                                ('employee_notice_period', '!=', 0),-->
+                        <!--                                                                                                ('state', 'not in',('transfer')),-->
+                        <!--                                                                                                ('transfer_type','!=','temp')-->
+                        <!--                                                                                            ]}"-->
+
+
+                        <button name="create_new_transfer_company_payslip"
+                                string="Generate Payslip"
+                                class="oe_highlight"
+                                invisible="state not in 'transfer'"
+                                type="object"/>
+
+                        <button name="reverse_employee_company_transfer"
+                                string="Reverse Transfer" class="oe_highlight"
+                                invisible="state not in ['transfer','reverse'] or transfer_type not in  'temp'"
+                                type="object"/>
+
+
+                        <field name="state" widget="statusbar" statusbar_visible="draft,reverse,approve"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_button_box" name="button_box">
+                            <button name="employee_new_contract_create_request"
+                                    class="oe_stat_button"
+                                    invisible="employee_count == 0"
+                                    icon="fa-book" type="object">
+
+
+                                <field name="employee_contract_count" widget="statinfo"
+                                       options="{'reload_on_button': true}"/>
+                            </button>
+
+                            <button name="employee_create_leave_request"
+                                    class="oe_stat_button"
+                                    invisible="employee_count == 0"
+                                    icon="fa-book" type="object">
+
+                                <field name="employee_leave_request" widget="statinfo"
+                                       options="{'reload_on_button': true}"/>
+                            </button>
+
+                            <button name="employee_new_payslip_create_request"
+                                    class="oe_stat_button" icon="fa-money"
+                                    invisible="employee_count == 0"
+                                    type="object">
+
+                                <field name="employee_payslip_count" widget="statinfo"
+                                       options="{'reload_on_button': true}"/>
+                            </button>
+
+
+                            <button name="employee_gratuity_action"
+                                    class="oe_stat_button" icon="fa-money"
+                                    invisible="employee_count == 0"
+                                    type="object">
+
+                                <field name="employee_gratuity_count" widget="statinfo"
+                                       options="{'reload_on_button': true}"/>
+                            </button>
+
+                            <button name="compute_employee_notice_period_button"
+                                    class="oe_stat_button" icon="fa-clock-o"
+                                    invisible="employee_notice_period == 0 and transfer_type != 'temp'"
+                                    type="object">
+
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="employee_notice_period" widget="statinfo"
+                                               options="{'reload_on_button': true}"/>
+                                    </span>
+                                    <span class="o_stat_text">
+                                        Probation
+                                    </span>
+                                </div>
+                            </button>
+
+                            <button name="employee_leave_allocation_info"
+                                    class="oe_stat_button" icon="fa-calendar"
+                                    invisible="employee_count == 0"
+                                    type="object">
+
+                                <div class="o_field_widget o_stat_info">
+                                    <span class="o_stat_value">
+                                        <field name="allocated_days" readonly="1" force_save="1"/>/
+                                        <field name="number_of_days"/>
+                                        Days
+                                    </span>
+                                    <span class="o_stat_text">
+                                        Time Off
+                                    </span>
+                                </div>
+                            </button>
+
+                            <xpath expr="//div[@name='button_box']" position="inside">
+                                <button name="%(hr.open_view_employee_list_my)d"
+                                        class="oe_stat_button"
+                                        icon="fa-users" context="{'active_test': False}"
+                                        invisible="employee_count == 0 and '1'"
+                                        type="action">
+
+                                    <field name="employee_count" widget="statinfo" string="Employee(s)"/>
+                                </button>
+                            </xpath>
+
+
+                        </div>
+                        <field name="image_field" widget='image' class="oe_avatar m-0"/>
+
+                        <div class="oe_title">
+                            <h1>
+                                <field name="name" readonly="1"/>
+                            </h1>
+                        </div>
+                        <group>
+                            <group string="Current Company">
+                                <field name="transfer_type" required="1"
+                                       readonly="state != 'draft' , record_type == 'intra'"
+
+                                />
+                                <field name="requested_date"
+                                       readonly="state not in ['draft']"/>
+                                <field name="employee_id"
+                                       options="{'no_create': True}"
+                                       readonly="state not in ['draft']"/>
+
+                                <field name="current_company"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="record_type"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="1"
+                                />
+                                <field name="company_id"
+                                       invisible="1"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="current_branch"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="current_department"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="current_job"
+                                       readonly="1"
+                                       force_save="1"/>
+                                <field name="current_grade_id"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+
+                                <field name="employee_count"
+                                       invisible="1"/>
+
+                                <field name="current_reporting_manager"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <field name="current_supervisor"
+                                       readonly="1"
+                                       force_save="1"
+                                />
+                                <!--                                                                <field name="payslip_generated" invisible="1"/>-->
+                                <!--                                                                <field name="payslip_reverse_generated" invisible="1"/>-->
+
+                                <field name="current_contract"
+                                       readonly="1"
+                                       invisible="1"
+                                       force_save="1"
+                                />
+                                <field name="current_employee_remaining_leaves"
+                                       readonly="1"
+                                       invisible="1"
+                                       force_save="1"
+                                />
+                                <field name="current_employee_leave"
+                                       readonly="1"
+                                       invisible="1"
+                                       force_save="1"
+                                />
+                                <field name="number_of_days"
+                                       readonly="1"
+                                       invisible="1"
+                                       force_save="1"
+                                />
+                                <field name="allocated_days"
+                                       readonly="1"
+                                       invisible="1"
+                                       force_save="1"
+                                />
+                                <field name="responsible"/>
+                                <field name="gratuity_amount" force_save="1" invisible="1"/>
+                            </group>
+                            <group string="Transfered Company">
+                                <field name="start_date" required="1" readonly="state not in ['draft']"/>
+                                <field name="end_date"
+                                       readonly="state  in ['reverse','cancel','reject']"
+                                       invisible="transfer_type != 'temp'"
+                                       required="transfer_type == 'temp'"/>
+                                <field name="transfer_company"
+                                       options="{'no_create': True}"/>
+                                <field name="transfer_branch"
+                                       options="{'no_create': True}"
+                                       domain="[('company_id', '=', transfer_company)]"
+                                       readonly="state != 'draft'"/>
+                                <field name="transfer_department"
+                                       options="{'no_create': True}"
+                                       domain="[('company_id', '=', transfer_company)]"
+                                       readonly="state != 'draft'"/>
+                                <field name="transfer_job"
+                                       options="{'no_create': True}"
+                                       domain="[('company_id', '=', transfer_company),('department_id', '=', transfer_department)]"
+                                       readonly="state != 'draft'"/>
+                                <field name="transfer_grade_id"
+                                       options="{'no_create': True}"
+                                       readonly="state != 'draft'"/>
+                                <field name="transfer_reporting_manager"
+                                       options="{'no_create': True}"
+                                       readonly="state != 'draft'"/>
+                                <field name="transfer_supervisor"
+                                       options="{'no_create': True}"
+                                       readonly="state != 'draft'"
+                                       invisible="employee_id == False"
+                                       required="current_grade_id > 2"/>
+
+                            </group>
+                            <group>
+                            </group>
+                        </group>
+                        <group>
+                            <group string="Default Company" invisible="employee_id == False"
+                            >
+                                <field name="employee_default_company"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False"
+                                />
+                                <field name="employee_default_branch"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False"
+                                />
+                                <field name="employee_default_company_ids"
+                                       widget='many2many_tags'
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False"
+                                />
+                                />
+                                <field name="employee_default_branch_ids"
+                                       widget='many2many_tags'
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False"
+                                />
+                                />
+                                <field name="employee_current_contract"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False and '1'"
+                                />
+                                <field name="employee_current_salary_journal"
+                                       readonly="1"
+                                       force_save="1"
+                                       invisible="employee_id == False and '1'"
+                                />
+                            </group>
+                            <group string="Payroll Accounting" invisible="employee_id == False"
+                            >
+                                <field name="journal_id"
+                                       domain="[('company_id', '=', transfer_company)]"
+                                       options="{'no_create': True}"
+                                       invisible="employee_id == False"
+
+                                />
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Remarks">
+                                <group>
+                                    <group>
+                                        <field name="remarks" readonly="state != 'draft'"/>
+                                        <field name="employee_holiday_status_id"
+                                               invisible="1"
+                                               domain="[('company_id', '=', transfer_company)]"
+                                               options="{'no_create': True}"/>
+
+
+                                        <field name="leave_id"
+                                               invisible="1"
+                                               domain="[('employee_id', '=', employee_id)]"
+                                               options="{'no_create': True}"/>
+
+
+                                    </group>
+                                </group>
+                            </page>
+                            <page string="Salary Breakdown">
+                                <group>
+                                    <group string="Current Company">
+                                        <field name="employee_current_salary_structure"
+                                               readonly="1" force_save="1"
+                                               options="{'no_create': True}"
+                                               invisible="employee_id == False"
+                                        />
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+
+                                        <field name="current_employee_basic" readonly="1"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="current_employee_housing_allowance" readonly="1"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="current_employee_travel_allowance" readonly="1"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="current_employee_other_allowance" readonly="1"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="current_employee_wage" readonly="1"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+
+                                    </group>
+                                    <group string="Transfer Company">
+                                        <field name="struct_id"
+                                               domain="[('company_id', '=', transfer_company)]"
+                                               options="{'no_create': True}"
+                                               invisible="employee_id == False"
+                                        />
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+
+                                        <field name="transfer_employee_basic" invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="transfer_employee_housing_allowance"
+                                               invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="transfer_employee_travel_allowance"
+                                               force_save="1"/>
+
+
+                                        <field name="transfer_employee_other_allowance" invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                        <field name="transfer_employee_wage" invisible="employee_id == False"
+
+                                               force_save="1"/>
+                                        <!--                                               attrs="{'invisible': [('employee_id', '=', False)]}"/>-->
+                                    </group>
+                                </group>
+                            </page>
+                        </notebook>
+                        <group/>
+                        <div class="oe_chatter">
+                            <field name="message_follower_ids" widget="mail_followers"/>
+                            <field name="activity_ids" widget="mail_activity"/>
+                            <field name="message_ids" widget="mail_thread"/>
+                        </div>
+                    </sheet>
+
+                </form>
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_view_inter_employee_company_transfers">
+            <field name="name">Company To Company</field>
+            <field name="res_model">company.transfer</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" eval="company_company_transfer_tree_views"/>
+            <field name="domain">[('record_type','=','inter')]</field>
+            <field name="context">{
+                'default_record_type':'inter'
+                }
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new document
+                </p>
+
+            </field>
+        </record>
+        <record model="ir.actions.act_window" id="action_view_intra_employee_company_transfers">
+            <field name="name">Company To Company</field>
+            <field name="res_model">company.transfer</field>
+            <field name="view_mode">tree,form</field>
+            <field name="view_id" eval="company_company_transfer_tree_views"/>
+            <field name="domain">[('record_type','=','intra')]</field>
+            <field name="context">{
+                'default_record_type':'intra',
+                'default_transfer_type':'permanent',
+                }
+            </field>
+            <field name="help" type="html">
+                <p class="o_view_nocontent_smiling_face">
+                    Create a new document
+                </p>
+
+            </field>
+        </record>
+        <menuitem id="transfer_parent" parent="hr.menu_hr_employee_payroll" name="Transfers" sequence="20"/>
+        <menuitem
+                name="Inter-Company Employee Transfer"
+                id="menu_inter_company_transfer"
+                action="action_view_inter_employee_company_transfers"
+                parent="apps_employee_company_transfer.transfer_parent"
+                sequence="16"/>
+        <menuitem
+                name="Intra-Company Employee Transfer"
+                id="menu_intra_company_transfer"
+                action="action_view_intra_employee_company_transfers"
+                parent="apps_employee_company_transfer.transfer_parent"
+                sequence="17"/>
+
+        <record id="account_move_view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">account.move.inherit.form</field>
+            <field name="model">account.move</field>
+            <field name="inherit_id" ref="account.view_move_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='payment_reference']" position="after">
+                    <field name="company_transfer_id"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="hr_leave_report_view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">hr.leave.report.inherit.tree</field>
+            <field name="model">hr.leave.report</field>
+            <field name="inherit_id" ref="hr_holidays.hr_leave_report_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//tree" position="inside">
+                    <field name="company_id"/>
+                </xpath>
+
+            </field>
+        </record>
+
+        <record id="res_company_view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">res.company.inherit.form</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//notebook/page" position="inside">
+                    <group>
+                        <field name="journal_id"/>
+                    </group>
+                    <group>
+                        <field name="gratuity_debit_account_id"/>
+                    </group>
+                    <group>
+                        <field name="gratuity_credit_account_id"/>
+                    </group>
+
+
+                </xpath>
+                <xpath expr="//field[@name='name']" position="after">
+                    <group>
+                        <field name="journal_id"/>
+                    </group>
+                </xpath>
+            </field>
+        </record>
+
+    </data>
+</odoo>
+

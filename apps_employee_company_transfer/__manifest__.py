@@ -1,0 +1,36 @@
+{
+    "name": "Employee Company Transfer",
+    'author': 'AppsComp Widgets Pvt Ltd',
+    "live_test_url": "https://www.youtube.com/watch?v=nlWbfPu1EnI",
+    # 'category': 'Sales',
+    "version": "17.0",
+    'summary': 'Displays the Employee ID, from the Employee Master, in Kanban view mode.',
+    'website': 'https://appscomp.com/',
+    "description": """
+    This module helps users generate Patient Card Report.   
+    """,
+    # 'images': ['static/description/banner.jpg'],
+    "depends": ['base', 'hr', 'apps_branch_master',
+                'hr_holidays', 'hr_contract', 'hr_recruitment', 'account', 'om_hr_payroll',
+                'om_hr_payroll_account'],
+    'data': [
+        'security/ir.model.access.csv',
+        'views/employee_fields.xml',
+        'views/company_transfer_view.xml',
+        'views/grade_selection.xml',
+        'data/grade.xml',
+        'data/appointment_letter_data.xml',
+    ],
+
+    'qweb': [],
+    'demo': [],
+    'test': [],
+    'css': [],
+    'js': [],
+    'license': 'LGPL-3',
+    'installable': True,
+    'application': True,
+    'auto_install': False,
+    'currency': 'EUR',
+    'price': '7',
+}

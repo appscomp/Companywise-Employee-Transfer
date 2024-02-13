@@ -1,0 +1,32 @@
+<odoo>
+    <data>
+        <record id="res_company_view_employee_form_inherit" model="ir.ui.view">
+            <field name="name">res.company.inherit.form</field>
+            <field name="model">res.company</field>
+            <field name="inherit_id" ref="base.view_company_form"/>
+            <field name="arch" type="xml">
+                <!--                            <xpath expr="//notebook/page[@name='description_page']/" position="after">-->
+
+                <xpath expr="//notebook/page" position="inside">
+                    <group>
+                        <field name="journal_id"/>
+                    </group>
+                    <group>
+                        <field name="gratuity_debit_account_id"/>
+                    </group>
+                    <group>
+                        <field name="gratuity_credit_account_id"/>
+                    </group>
+
+
+
+                </xpath>
+                <!--                <xpath expr="//field[@name='name']" position="after">-->
+                <!--                    <group>-->
+                <!--                        <field name="journal_id"/>-->
+                <!--                    </group>-->
+                <!--                </xpath>-->
+            </field>
+        </record>
+    </data>
+</odoo>
