@@ -21,7 +21,7 @@
         'data/appointment_letter_data.xml',
     ],
     'images': ['static/description/banner.png'],
-    'price': '55',
+    'price': '75',
     "license": 'OPL-1',
     'installable': True,
     'auto_install': False
