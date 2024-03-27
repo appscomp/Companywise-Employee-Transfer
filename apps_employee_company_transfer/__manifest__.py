@@ -32,5 +32,5 @@
     'application': True,
     'auto_install': False,
     'currency': 'EUR',
-    'price': '55',
+    'price': '75',
 }
