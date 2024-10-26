@@ -22,7 +22,7 @@
     ],
     # 'images': ['static/description/banner.png'],
     'images': ['static/description/gif.gif'],
-    'price': '41.50',
+    'price': '42.14',
     # 'price': '75',
     "license": 'OPL-1',
     'installable': True,
