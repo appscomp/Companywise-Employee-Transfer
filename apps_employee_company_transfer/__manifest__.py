@@ -10,8 +10,8 @@
                " offer another option for managing workforce distribution efficiently",
     'website': 'https://appscomp.com/',
     'images': ['static/description/gif.gif'],
-    'price': '42.09',
-    # 'images': ['static/description/banner.png'],
+    #'price': '42.09',
+    'images': ['static/description/banner.png'],
     "depends": ['base', 'hr', 'apps_branch_master',
                 'hr_holidays', 'hr_contract', 'hr_recruitment', 'account', 'om_hr_payroll',
                 'om_hr_payroll_account'],
@@ -34,5 +34,5 @@
     'application': True,
     'auto_install': False,
     'currency': 'EUR',
-    # 'price': '75',
+    'price': '85',
 }
