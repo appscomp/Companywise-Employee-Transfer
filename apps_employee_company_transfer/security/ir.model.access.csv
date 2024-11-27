@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_grade,employee.grade,model_employee_grade,,1,1,1,1
+access_company_transfer,company.transfer,model_company_transfer,,1,1,1,1
