@@ -3,11 +3,7 @@
     'author': 'AppsComp Widgets Pvt Ltd',
     'category': 'Human Resources',
     "version": "17.0",
-    'summary': "Inter-company (Company-to-Company) employee transfer operations involve the movement of employees from"
-               " one subsidiary or branch of a company to another. This process, driven by organizational needs such as"
-               " skills alignment, project requirements, or strategic workforce planning, aims to optimize human "
-               "resources across different parts of the company. Additionally, intra-company transfers within the company"
-               " offer another option for managing workforce distribution efficiently",
+    'summary': "inter company and intra company employee transfer/employee transfer/company transfer/inter company transfer/intra company transfer/multi company employee transfer/employee company transfer/HR transfer/transfer approval/employee",
     'website': 'https://appscomp.com/',
     'images': ['static/description/gif.gif'],
     #'price': '42.09',
@@ -34,5 +30,5 @@
     'application': True,
     'auto_install': False,
     'currency': 'EUR',
-    'price': '85',
+    'price': '59.54',
 }
