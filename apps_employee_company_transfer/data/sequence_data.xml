@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="company_company_transfer_sequence" model="ir.sequence">
+        <field name="name">Inter-Company Employee Transfer</field>
+        <field name="code">company.transfer</field>
+        <field name="prefix">Inter/ECT/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+        <field name="implementation">standard</field>
+    </record>
+    <record id="intra_company_company_transfer_sequence" model="ir.sequence">
+        <field name="name">Intra-Company Employee Transfer</field>
+        <field name="code">intra.company.transfer</field>
+        <field name="prefix">Intra/ECT/</field>
+        <field name="padding">5</field>
+        <field name="number_increment">1</field>
+        <field name="company_id" eval="False"/>
+        <field name="implementation">standard</field>
+    </record>
+</odoo>

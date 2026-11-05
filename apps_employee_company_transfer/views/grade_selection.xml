@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="branch_employee_grade_form_views" model="ir.ui.view">
+        <field name="name">employee.grade.form.view</field>
+        <field name="model">employee.grade</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="grade"/>
+                        <field name="level"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="branch_employee_grade_tree_views" model="ir.ui.view">
+        <field name="name">employee.grade.list.view</field>
+        <field name="model">employee.grade</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="grade"/>
+                <field name="level"/>
+            </list>
+        </field>
+    </record>
+    <record model="ir.actions.act_window" id="action_view_branch_grade">
+        <field name="name">Employee Grade</field>
+        <field name="res_model">employee.grade</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create a grade</p>
+        </field>
+    </record>
+    <menuitem name="Grade Selection"
+              id="menu_inter_grade_transfer"
+              action="action_view_branch_grade"
+              parent="hr.menu_human_resources_configuration"
+              groups="hr.group_hr_manager"
+              sequence="15"/>
+</odoo>
