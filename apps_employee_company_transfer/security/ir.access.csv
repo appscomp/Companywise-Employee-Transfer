@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_employee_grade_user,employee.grade user,employee.grade,base.group_user,r,
+access_employee_grade_hr_manager,employee.grade hr manager,employee.grade,hr.group_hr_manager,crud,
+access_company_transfer_user,company.transfer user,company.transfer,base.group_user,cru,"['|', '|', '|', ('user_id', '=', user.id), ('responsible.user_id', '=', user.id), ('current_reporting_manager.user_id', '=', user.id), ('transfer_reporting_manager.user_id', '=', user.id)]"
+access_company_transfer_hr_user,company.transfer hr user,company.transfer,hr.group_hr_user,cru,
+access_company_transfer_hr_manager,company.transfer hr manager,company.transfer,hr.group_hr_manager,crud,
+company_transfer_multi_company_rule,Employee Transfer: multi-company,company.transfer,,crud,"['|', '|', ('company_id', 'in', company_ids), ('current_company', 'in', company_ids), ('transfer_company', 'in', company_ids)]"

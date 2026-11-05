@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_employee_view_employee_form_inherit" model="ir.ui.view">
+        <field name="name">hr.employee.inherit.form.transfer</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Transfer Details" name="transfer_details" groups="hr.group_hr_user">
+                    <group>
+                        <group string="Employment">
+                            <field name="branch" options="{'no_create': True}"/>
+                            <field name="work_loc_id" options="{'no_create': True}"/>
+                            <field name="grade" options="{'no_create': True}"/>
+                            <field name="reporting_manager"/>
+                            <field name="supervisor"/>
+                            <field name="joining_date"/>
+                            <field name="employee_status"/>
+                            <field name="probation_month"/>
+                            <field name="date_of_permanancy"/>
+                        </group>
+                        <group string="Employee">
+                            <field name="first_name"/>
+                            <field name="last_name"/>
+                            <field name="name_in_wps"/>
+                            <field name="saturday_off"/>
+                            <field name="insurance_no"/>
+                        </group>
+                        <group string="Salary Breakdown">
+                            <field name="basic"/>
+                            <field name="housing_allowance"/>
+                            <field name="travel_allowance"/>
+                            <field name="other_allowance"/>
+                            <field name="wage"/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
