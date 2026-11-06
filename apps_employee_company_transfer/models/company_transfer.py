@@ -111,6 +111,10 @@ class CompanyTransfer(models.Model):
         string='Default Allowed Branches',
         help="Branches the user of the employee is allowed in after the transfer "
              "(the target branch is always added).")
+    carried_allocation_ids = fields.Many2many(
+        'hr.leave.allocation', 'company_transfer_allocation_rel', 'transfer_id', 'allocation_id',
+        string='Carried Over Time Off Allocations', copy=False, readonly=True)
+
     state = fields.Selection(
         [('draft', 'Draft'),
          ('cancel', 'Cancelled'),
@@ -391,7 +395,6 @@ class CompanyTransfer(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         sudo_vals = []
-        journal_defaults = []
         for vals in vals_list:
             record_type = vals.get('record_type') or 'inter'
             vals['record_type'] = record_type
@@ -410,18 +413,11 @@ class CompanyTransfer(models.Model):
                     snapshot.setdefault('transfer_company', employee.sudo().company_id.id)
                     vals.setdefault('transfer_company', employee.sudo().company_id.id)
             sudo_vals.append(snapshot)
-            journal_defaults.append(
-                self.env['res.company'].sudo().browse(vals['transfer_company']).journal_id.id
-                if 'journal_id' not in vals and vals.get('transfer_company') else False
-            )
         records = super().create(vals_list)
         # sensitive/snapshot data written with sudo so that non-HR requesters can create requests
-        for rec, snapshot, journal_id in zip(records, sudo_vals, journal_defaults):
-            update_vals = dict(snapshot)
-            if journal_id:
-                update_vals['journal_id'] = journal_id
-            if update_vals:
-                rec.sudo().write(update_vals)
+        for rec, snapshot in zip(records, sudo_vals):
+            if snapshot:
+                rec.sudo().write({k: v for k, v in snapshot.items()})
         return records
 
     def write(self, vals):
@@ -687,8 +683,9 @@ class CompanyTransfer(models.Model):
         self._complete_contract_version(version, employee, target)
         # 4. user access
         self._move_user_access(employee, target)
-        # time off: allocations are linked to the employee and the (company independent) work entry
-        # types, so the balances simply follow the employee
+        # 5. time off
+        if sudo.current_company != sudo.transfer_company:
+            self._carry_over_leaves(employee, source_company, target['company'])
 
     def _employee_vals(self, employee, target, to_target):
         company = target['company']
@@ -759,17 +756,17 @@ class CompanyTransfer(models.Model):
         self.ensure_one()
         vals = {
             'name': _('Contract for %s', employee.name),
+            'additional_note': _(
+                "Contract (Transfer %(name)s) for %(employee)s.\nBasic: %(basic)s, Housing: %(housing)s, "
+                "Travel: %(travel)s, Other: %(other)s",
+                name=self.name, employee=employee.name, basic=target['basic'], housing=target['housing'],
+                travel=target['travel'], other=target['other']),
         }
         if 'struct_id' in version._fields and target.get('struct_id'):
             vals['struct_id'] = target['struct_id']
         if 'journal_id' in version._fields and target.get('journal'):
             vals['journal_id'] = target['journal'].id
         version.sudo().write(vals)
-        self.message_post(body=_(
-            "New contract from %(date)s: wage %(wage)s (basic %(basic)s, housing %(housing)s, "
-            "travel %(travel)s, other %(other)s).",
-            date=version.contract_date_start, wage=target['wage'], basic=target['basic'],
-            housing=target['housing'], travel=target['travel'], other=target['other']))
 
     # -- user access ----------------------------------------------------
     def _move_user_access(self, employee, target):
@@ -783,6 +780,42 @@ class CompanyTransfer(models.Model):
         branches = target['branches'].filtered(lambda b: b.company_id in target['companies'])
         vals.update({'branch_ids': [(6, 0, branches.ids)], 'branch_id': target['branch'].id})
         user.write(vals)
+
+    # -- time off -------------------------------------------------------
+    def _carry_over_leaves(self, employee, from_company, to_company):
+        """Carry the remaining days of the company specific time off types over the new company."""
+        Allocation = self.env['hr.leave.allocation'].sudo()
+        LeaveType = self.env['hr.leave.type'].sudo()
+        allocations = Allocation.search([
+            ('employee_id', '=', employee.id), ('state', '=', 'validate'),
+            ('holiday_status_id.company_id', '=', from_company.id),
+            ('holiday_status_id.requires_allocation', '=', True)])
+        carried = Allocation
+        for allocation in allocations:
+            remaining = allocation.number_of_days - allocation.leaves_taken
+            if remaining <= 0:
+                continue
+            new_type = LeaveType.search([
+                ('company_id', '=', to_company.id), ('name', '=', allocation.holiday_status_id.name),
+                ('requires_allocation', '=', True)], limit=1)
+            if not new_type:
+                self.message_post(body=_(
+                    "No time off type '%(type)s' in %(company)s: %(days)s day(s) were not carried over.",
+                    type=allocation.holiday_status_id.name, company=to_company.name, days=remaining))
+                continue
+            new_allocation = Allocation.create({
+                'name': _('Transfer %(name)s: %(type)s', name=self.name, type=new_type.name),
+                'employee_id': employee.id,
+                'holiday_status_id': new_type.id,
+                'number_of_days': remaining,
+                'allocation_type': 'regular',
+                'date_from': fields.Date.context_today(self),
+            })
+            new_allocation._action_validate()
+            carried |= new_allocation
+        if carried:
+            self.sudo().write({'carried_allocation_ids': [(4, a.id) for a in carried]})
+            self.message_post(body=_("%s time off allocation(s) carried over to %s.", len(carried), to_company.name))
 
     # ------------------------------------------------------------------
     # Smart buttons

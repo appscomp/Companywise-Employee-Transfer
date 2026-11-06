@@ -80,12 +80,16 @@ class TransferCommon(TransactionCase):
             'contract_date_start': today_minus(cls.today, 200),
         })
         cls.contract_a = cls.employee.current_version_id
-        cls.leave_type_a = cls.env['hr.work.entry.type'].create({
-            'name': 'Special Leave', 'code': 'SPLTR', 'requires_allocation': True,
-            'leave_validation_type': 'no_validation', 'time_off_selectable': True})
+        LeaveType = cls.env['hr.leave.type']
+        cls.leave_type_a = LeaveType.create({
+            'name': 'Special Leave', 'company_id': cls.company_a.id, 'requires_allocation': True,
+            'leave_validation_type': 'no_validation'})
+        cls.leave_type_b = LeaveType.create({
+            'name': 'Special Leave', 'company_id': cls.company_b.id, 'requires_allocation': True,
+            'leave_validation_type': 'no_validation'})
         cls.allocation_a = cls.env['hr.leave.allocation'].create({
-            'name': 'Initial', 'employee_id': cls.employee.id, 'work_entry_type_id': cls.leave_type_a.id,
-            'number_of_days': 10, 'date_from': today_minus(cls.today, 60),
+            'name': 'Initial', 'employee_id': cls.employee.id, 'holiday_status_id': cls.leave_type_a.id,
+            'number_of_days': 10, 'allocation_type': 'regular', 'date_from': today_minus(cls.today, 60),
         })
         cls.allocation_a._action_validate()
 
