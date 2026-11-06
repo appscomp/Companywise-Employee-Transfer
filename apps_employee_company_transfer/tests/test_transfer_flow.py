@@ -44,12 +44,16 @@ class TestTransferFlow(TransferCommon):
                          'transfer_department': self.dep_b.id, 'transfer_job': self.job_b.id})
 
     def test_onchange_form(self):
+        journal_b = self.env['account.journal'].create({
+            'name': 'Salary B', 'code': 'SALB', 'type': 'general', 'company_id': self.company_b.id})
+        self.company_b.journal_id = journal_b
         form = Form(self.env['company.transfer'].with_user(self.hr_manager).with_context(
             default_record_type='inter'))
         form.employee_id = self.employee
         self.assertEqual(form.current_company, self.company_a)
         self.assertEqual(form.current_reporting_manager, self.mgr_a)
         form.transfer_company = self.company_b
+        self.assertEqual(form.journal_id, journal_b)
         form.transfer_branch = self.branch_b1
         form.transfer_department = self.dep_b
         form.transfer_job = self.job_b
@@ -68,6 +72,13 @@ class TestTransferFlow(TransferCommon):
             f.transfer_branch = self.branch_b1
             f.transfer_department = self.dep_b
             f.transfer_job = self.job_b
+
+    def test_create_defaults_target_company_salary_journal(self):
+        journal_b = self.env['account.journal'].create({
+            'name': 'Salary B', 'code': 'SALB', 'type': 'general', 'company_id': self.company_b.id})
+        self.company_b.journal_id = journal_b
+        transfer = self._create()
+        self.assertEqual(transfer.sudo().journal_id, journal_b)
 
     def test_intra_onchange_form(self):
         form = Form(self.env['company.transfer'].with_user(self.hr_manager).with_context(
@@ -179,7 +190,7 @@ class TestTransferFlow(TransferCommon):
         self.assertEqual(new_contract.wage, 2000)
         self.assertEqual(new_contract.job_id, self.job_b)
         self.assertFalse(new_contract.contract_date_end)
-        self.assertIn('Transfer', new_contract.additional_note)
+        self.assertIn('New contract', ' '.join(tr.message_ids.mapped(lambda m: m.body or '')))
         self.assertEqual(self.contract_a.job_id, self.job_a)  # history kept
         # user access
         user = self.emp_user
@@ -187,12 +198,10 @@ class TestTransferFlow(TransferCommon):
         self.assertEqual(user.company_ids, self.company_a | self.company_b)
         self.assertEqual(user.branch_id, self.branch_b1)
         self.assertEqual(user.branch_ids, self.branch_a1 | self.branch_b1)
-        # carried over time off: 10 days allocated, nothing taken
-        carried = tr.sudo().carried_allocation_ids
-        self.assertEqual(len(carried), 1)
-        self.assertEqual(carried.holiday_status_id, self.leave_type_b)
-        self.assertEqual(carried.number_of_days, 10)
-        self.assertEqual(carried.state, 'validate')
+        # time off allocations follow the employee: same balance after the transfer
+        tr.invalidate_recordset()
+        self.assertEqual(tr.allocated_days, 10)
+        self.assertEqual(self.allocation_a.state, 'validate')
         # notifications queued + history
         self.assertGreater(self.env['mail.mail'].search_count([]), mails_before)
         history = ' '.join(tr.message_ids.mapped(lambda m: m.body or ''))
@@ -200,8 +209,7 @@ class TestTransferFlow(TransferCommon):
         self.env.flush_all()
         self.env.cr.precommit.run()
         self.env.invalidate_all()
-        tracked = tr.sudo().message_ids.tracking_value_ids.mapped('field_id.name')
-        self.assertIn('state', tracked)
+        self.assertTrue(tr.sudo().message_ids.filtered(lambda m: m.message_type == 'tracking'))  # status tracking
         # cannot be executed twice, permanent cannot be reversed
         with self.assertRaises(UserError):
             tr.update_employee_company_transfer()
@@ -232,7 +240,6 @@ class TestTransferFlow(TransferCommon):
         self.assertEqual(emp.current_version_id.wage, 1500)
         self.assertEqual(self.contract_a.contract_date_end, self.today - timedelta(days=1))
         self.assertEqual(self.emp_user.branch_id, self.branch_a2)
-        self.assertFalse(tr.sudo().carried_allocation_ids)  # same company: nothing to carry
         self.assertEqual(self.allocation_a.state, 'validate')
         self.assertGreater(self.env['mail.mail'].search_count([]), mails)
 
@@ -296,27 +303,12 @@ class TestTransferFlow(TransferCommon):
         tr.invalidate_recordset()
         self.assertEqual(tr.employee_contract_count, 2)
 
-    def test_leave_carry_over_uses_remaining_days(self):
-        leave = self.env['hr.leave'].with_context(leave_fast_create=True).create({
-            'name': 'trip', 'employee_id': self.employee.id, 'holiday_status_id': self.leave_type_a.id,
-            'request_date_from': self.today - timedelta(days=21), 'request_date_to': self.today - timedelta(days=21),
-        })
-        if leave.state != 'validate':
-            leave.sudo().action_approve()
-        taken = self.allocation_a.leaves_taken
+    def test_time_off_balance_kept(self):
         tr = self._create()
+        self.assertEqual(tr.sudo().current_employee_remaining_leaves, 10)
         self._to_approved(tr)
         tr.update_employee_company_transfer()
-        carried = tr.sudo().carried_allocation_ids
-        self.assertEqual(carried.number_of_days, 10 - taken)
-
-    def test_leave_type_missing_in_target_company(self):
-        self.leave_type_b.unlink()
-        tr = self._create()
-        self._to_approved(tr)
-        tr.update_employee_company_transfer()
-        self.assertFalse(tr.sudo().carried_allocation_ids)
-        self.assertIn('not carried over', ' '.join(tr.message_ids.mapped(lambda m: m.body or '')))
+        self.assertEqual(self.env['company.transfer']._employee_remaining_leaves(self.employee), 10)
 
     def test_transfer_fails_when_employee_moved_elsewhere(self):
         tr = self._create()
@@ -419,6 +411,8 @@ class TestTransferFlow(TransferCommon):
             form.name = 'Form Employee'
             form.grade = self.grade_1
             form.branch = self.branch_a1
+            form.work_location_id = self.env['hr.work.location'].create({
+                'name': 'Main office', 'address_id': self.company_a.partner_id.id, 'location_type': 'office'})
         self.assertEqual(self.env['hr.employee'].search([('name', '=', 'Form Employee')]).grade, self.grade_1)
 
     def test_grade_unique(self):

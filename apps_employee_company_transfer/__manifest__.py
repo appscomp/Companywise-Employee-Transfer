@@ -2,7 +2,7 @@
     'name': 'Inter Company and Intra Company Employee Transfer',
     'author': 'AppsComp Widgets Pvt Ltd',
     'category': 'Human Resources',
-    'version': '19.0.1.0.0',
+    'version': '20.0.1.0.0',
     'summary': 'Inter company and intra company employee transfer with approval workflow, '
                'contract, time off and user access handling',
     'description': """
@@ -22,14 +22,14 @@ Features
     'website': 'https://appscomp.com/',
     'depends': ['base', 'mail', 'hr', 'hr_holidays', 'account', 'apps_branch_master'],
     'data': [
-        'security/security.xml',
-        'security/ir.model.access.csv',
+        'security/ir.access.csv',
         'data/sequence_data.xml',
         'data/grade.xml',
         'data/mail_template_data.xml',
         'views/grade_selection.xml',
         'views/company_transfer_view.xml',
         'views/employee_fields.xml',
+        'views/job_position_views.xml',
         'views/res_company.xml',
     ],
     'assets': {
