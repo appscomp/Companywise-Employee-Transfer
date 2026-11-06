@@ -391,6 +391,7 @@ class CompanyTransfer(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         sudo_vals = []
+        journal_defaults = []
         for vals in vals_list:
             record_type = vals.get('record_type') or 'inter'
             vals['record_type'] = record_type
@@ -409,11 +410,18 @@ class CompanyTransfer(models.Model):
                     snapshot.setdefault('transfer_company', employee.sudo().company_id.id)
                     vals.setdefault('transfer_company', employee.sudo().company_id.id)
             sudo_vals.append(snapshot)
+            journal_defaults.append(
+                self.env['res.company'].sudo().browse(vals['transfer_company']).journal_id.id
+                if 'journal_id' not in vals and vals.get('transfer_company') else False
+            )
         records = super().create(vals_list)
         # sensitive/snapshot data written with sudo so that non-HR requesters can create requests
-        for rec, snapshot in zip(records, sudo_vals):
-            if snapshot:
-                rec.sudo().write({k: v for k, v in snapshot.items()})
+        for rec, snapshot, journal_id in zip(records, sudo_vals, journal_defaults):
+            update_vals = dict(snapshot)
+            if journal_id:
+                update_vals['journal_id'] = journal_id
+            if update_vals:
+                rec.sudo().write(update_vals)
         return records
 
     def write(self, vals):

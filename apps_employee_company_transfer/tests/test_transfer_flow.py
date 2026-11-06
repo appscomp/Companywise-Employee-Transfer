@@ -44,12 +44,16 @@ class TestTransferFlow(TransferCommon):
                          'transfer_department': self.dep_b.id, 'transfer_job': self.job_b.id})
 
     def test_onchange_form(self):
+        journal_b = self.env['account.journal'].create({
+            'name': 'Salary B', 'code': 'SALB', 'type': 'general', 'company_id': self.company_b.id})
+        self.company_b.journal_id = journal_b
         form = Form(self.env['company.transfer'].with_user(self.hr_manager).with_context(
             default_record_type='inter'))
         form.employee_id = self.employee
         self.assertEqual(form.current_company, self.company_a)
         self.assertEqual(form.current_reporting_manager, self.mgr_a)
         form.transfer_company = self.company_b
+        self.assertEqual(form.journal_id, journal_b)
         form.transfer_branch = self.branch_b1
         form.transfer_department = self.dep_b
         form.transfer_job = self.job_b
@@ -68,6 +72,13 @@ class TestTransferFlow(TransferCommon):
             f.transfer_branch = self.branch_b1
             f.transfer_department = self.dep_b
             f.transfer_job = self.job_b
+
+    def test_create_defaults_target_company_salary_journal(self):
+        journal_b = self.env['account.journal'].create({
+            'name': 'Salary B', 'code': 'SALB', 'type': 'general', 'company_id': self.company_b.id})
+        self.company_b.journal_id = journal_b
+        transfer = self._create()
+        self.assertEqual(transfer.sudo().journal_id, journal_b)
 
     def test_intra_onchange_form(self):
         form = Form(self.env['company.transfer'].with_user(self.hr_manager).with_context(

@@ -29,6 +29,7 @@ Features
         'views/grade_selection.xml',
         'views/company_transfer_view.xml',
         'views/employee_fields.xml',
+        'views/job_position_views.xml',
         'views/res_company.xml',
     ],
     'assets': {
